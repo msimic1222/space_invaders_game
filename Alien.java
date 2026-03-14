@@ -13,9 +13,12 @@ public class Alien {
     int x;
     int y;
 
+    int width = 40;
+    int height = 40;
+
     Image alienImage;
 
-    public Alien(int x, int y){
+    public Alien(int x,int y){
 
         this.x = x;
         this.y = y;
@@ -25,7 +28,6 @@ public class Alien {
 
     public void draw(Graphics g){
 
-        g.drawImage(alienImage, x, y, 40, 40, null);
-
+        g.drawImage(alienImage,x,y,width,height,null);
     }
 }

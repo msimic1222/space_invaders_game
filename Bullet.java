@@ -6,40 +6,37 @@ eventually implemented in javascript
 
 ***********************/
 
-import java.awt.*;
+import java.awt.Graphics;
+import java.awt.Image;
 import javax.swing.ImageIcon;
 
 public class Bullet {
 
     int x;
     int y;
+
+    int width = 12;
+    int height = 24;
+
     int speed = 8;
-    Image bulletImage;
 
-    // constructor with image
-    public Bullet(int x, int y, String imageFile) {
+    Image laserImage;
+
+    public Bullet(int x,int y){
+
         this.x = x;
         this.y = y;
-        bulletImage = new ImageIcon(imageFile).getImage();
+
+        laserImage = new ImageIcon("laserbeam.png").getImage();
     }
 
-    // fallback constructor (white rectangle)
-    public Bullet(int x, int y) {
-        this.x = x;
-        this.y = y;
-        bulletImage = null;
-    }
+    public void move(){
 
-    public void move() {
         y -= speed;
     }
 
-    public void draw(Graphics g) {
-        if (bulletImage != null) {
-            g.drawImage(bulletImage, x, y, 16, 32, null); // adjust size
-        } else {
-            g.setColor(Color.white);
-            g.fillRect(x, y, 4, 10);
-        }
+    public void draw(Graphics g){
+
+        g.drawImage(laserImage,x,y,width,height,null);
     }
 }

@@ -14,39 +14,39 @@ public class Player {
     int x;
     int y;
 
+    int width = 40;
+    int height = 40;
+
     int speed = 6;
 
     Image playerImage;
 
-    public Player(int x, int y){
+    public Player(int x,int y){
+
         this.x = x;
         this.y = y;
 
-        // Load the player spaceship image
         playerImage = new ImageIcon("player.png").getImage();
     }
 
     public void moveLeft(){
+
         x -= speed;
-        if(x < 0) x = 0; // prevent going off screen
+
+        if(x < 0)
+            x = 0;
     }
 
     public void moveRight(){
+
         x += speed;
-        if(x > 760) x = 760; // assuming 800px window, 40px width ship
+
+        if(x + width > 800)
+            x = 800 - width;
     }
 
     public void draw(Graphics g){
-        // Draw the spaceship image
-        g.drawImage(playerImage, x, y, getWidth(), getHeight(), null);
-    }
 
-    // Methods to get width/height for bullet alignment
-    public int getWidth(){
-        return 40; // match size drawn
-    }
-
-    public int getHeight(){
-        return 40;
+        g.drawImage(playerImage,x,y,width,height,null);
     }
 }
