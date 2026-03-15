@@ -285,7 +285,7 @@ function gameLoop(timeStamp){ // function for gameLoop
             });
         });
 
-        if(Math.random()<0.007 && aliens.length>0){ // if statement to handle alien invader bullets
+        if(Math.random()<0.003 && aliens.length>0){ // if statement to handle alien invader bullets
 
             const shooter = aliens[Math.floor(Math.random()*aliens.length)];
 
