@@ -285,7 +285,7 @@ function gameLoop(timeStamp){
             });
         });
 
-        if(Math.random()<0.003 && aliens.length>0){
+        if(Math.random()<0.005 && aliens.length>0){
 
             const shooter = aliens[Math.floor(Math.random()*aliens.length)];
 
@@ -327,7 +327,7 @@ function gameLoop(timeStamp){
 
             let sign = Math.sign(alienDirection);
 
-            alienDirection = sign * (1.6 + (15 - alive) / 6);
+            alienDirection = sign * (1.6 + (15 - alive) / 5);
 
             if(Math.abs(alienDirection) > 8)
                 alienDirection = sign * 8;
