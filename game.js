@@ -327,10 +327,10 @@ function gameLoop(timeStamp){
 
             let sign = Math.sign(alienDirection);
 
-            alienDirection = sign * (1.6 + (15 - alive) / 18);
+            alienDirection = sign * (2.2 + (15 - alive) / 10);
 
-            if(Math.abs(alienDirection) > 3)
-                alienDirection = sign * 3;
+            if(Math.abs(alienDirection) > 5)
+                alienDirection = sign * 5;
         }
 
         let hitEdge=false;
