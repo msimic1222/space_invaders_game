@@ -31,12 +31,11 @@ let gameState = "title";
 
 // VARIABLES
 
-let player; // all game objects and variables are declared here for easy access in all functions
+let player; 
 let bullets;
 let alienBullets;
 let aliens;
 let explosions;
-let stars;
 
 let score;
 let lives;
@@ -45,31 +44,8 @@ let gameOverReason = "";
 
 // CLASSES
 
-class Star{ // class for the starry background, just for visual effect
-    constructor(){
-        this.x = Math.random()*W;
-        this.y = Math.random()*H;
-        this.size = Math.random()*2 + 1;
-        this.speed = Math.random()*1 + 0.5;
-    }
-
-    move(){ // moves the star downwards to create a scrolling effect
-        this.y += this.speed;
-
-        if(this.y > H){
-            this.y = 0;
-            this.x = Math.random()*W;
-        }
-    }
-
-    draw(){ // draws the star as a white square
-        ctx.fillStyle="white";
-        ctx.fillRect(this.x,this.y,this.size,this.size);
-    }
-}
-
-class Player{ // class for the player's spaceship 
-    constructor(x,y){  // constructor takes initial x and y position of the player
+class Player{
+    constructor(x,y){
         this.x=x;
         this.y=y;
         this.width=40;
@@ -77,18 +53,18 @@ class Player{ // class for the player's spaceship
         this.speed=6;
     }
 
-    moveLeft(){ // method to move the player left, checks for boundaries to prevent moving off screen
+    moveLeft(){
         this.x-=this.speed;
         if(this.x<0) this.x=0;
     }
 
-    moveRight(){ // method to move the player right, checks for boundaries to prevent moving off screen
+    moveRight(){
         this.x+=this.speed;
         if(this.x+this.width>W)
             this.x=W-this.width;
     }
 
-    draw(){ // method to draw the player's spaceship using the loaded image
+    draw(){
         ctx.drawImage(playerImg,this.x,this.y,this.width,this.height);
     }
 }
@@ -101,13 +77,13 @@ class Alien{
         this.height=40;
     }
 
-    draw(){ // method to draw the alien invader using the loaded image
+    draw(){
         ctx.drawImage(alienImg,this.x,this.y,this.width,this.height);
     }
 }
 
-class Bullet{ // class for the player's laser/bullet
-    constructor(x,y){ // constructor, takes x and y position of the bullet
+class Bullet{
+    constructor(x,y){
         this.x=x;
         this.y=y;
         this.width=16;
@@ -115,17 +91,17 @@ class Bullet{ // class for the player's laser/bullet
         this.speed=8;
     }
 
-    move(){ // method to move bullet upwards 
+    move(){
         this.y-=this.speed;
     }
 
-    draw(){ // draws the bullet using the loaded laser image
+    draw(){
         ctx.drawImage(laserImg,this.x,this.y,this.width,this.height);
     }
 }
 
-class AlienBullet{ // class for alien's bullet, it is similar to player's, instead moving upwards
-    constructor(x,y){ // constructor, takes x and y position of the alien bullet
+class AlienBullet{
+    constructor(x,y){
         this.x=x;
         this.y=y;
         this.width=6;
@@ -133,18 +109,18 @@ class AlienBullet{ // class for alien's bullet, it is similar to player's, inste
         this.speed=4;
     }
 
-    move(){ // method to move alien bullet downwards towards the player
+    move(){
         this.y+=this.speed;
     }
 
-    draw(){ // draws alien bullet as red rectangle, didn't want to use image to differentiate from player 
+    draw(){
         ctx.fillStyle="red";
         ctx.fillRect(this.x,this.y,this.width,this.height);
     }
 }
 
-class Explosion{ // explosion class for when player/invader is hit 
-    constructor(x,y){ // constructor takes x and y positions 
+class Explosion{
+    constructor(x,y){
         this.x=x;
         this.y=y;
         this.timer=20;
@@ -164,47 +140,42 @@ class Explosion{ // explosion class for when player/invader is hit
 
 function startGame(){
 
-    player = new Player(380,520); // creates player object at the bottom center of the screen
+    player = new Player(380,520);
 
-    bullets=[]; // initializes arrays for bullets, alien bullets, aliens, explosions, and stars
+    bullets=[];
     alienBullets=[];
     aliens=[];
     explosions=[];
-    stars=[];
 
-    score=0; // score starts at 0, lives start at 3, and alien direction starts moving right (positive)
+    score=0;
     lives=3;
 
     alienDirection=2;
 
-    for(let i=0;i<100;i++){ // for loop to create 100 stars for the background
-        stars.push(new Star());
-    }
-
-    for(let r=0;r<3;r++){ // nested for loop to create aliens in grid pattern 
+    for(let r=0;r<3;r++){
         for(let c=0;c<5;c++){
             aliens.push(new Alien(100+c*120,60+r*60));
         }
     }
 
-    gameState="playing"; // gameState is set to "playing", start game, allow player to move/shoot
+    gameState="playing";
 }
 
 // INPUT CONTROLS
 
 const keys={};
 
-document.addEventListener("keydown",e=>{ // event listener for keydown
+document.addEventListener("keydown",e=>{
 
-    keys[e.code]=true; // sets key code to true in keys object when pressed
+    keys[e.code]=true;
 
-    if(gameState==="title" && e.code==="Enter"){ // if on title screen and player presses Enter,
-        startGame(); // start the game
+    if(gameState==="title" && e.code==="Enter"){
+        startGame();
     }
 
 });
 
-document.addEventListener("keyup",e=>{ // action listener for keyup
+document.addEventListener("keyup",e=>{
     keys[e.code]=false;
 });
 
@@ -218,21 +189,6 @@ function gameLoop(timeStamp){
     lastTime = timeStamp;
 
     ctx.clearRect(0,0,W,H);
-
-    // STAR BACKGROUND
-
-    if(stars){
-        stars.forEach(star=>{
-            star.y += star.speed * deltaTime;
-
-            if(star.y > H){
-                star.y = 0;
-                star.x = Math.random()*W;
-            }
-
-            star.draw();
-        });
-    }
 
     if(gameState==="title"){
 
@@ -432,4 +388,4 @@ function gameLoop(timeStamp){
     requestAnimationFrame(gameLoop);
 }
 
-gameLoop(); // start the game loop when the script loads
+gameLoop();
