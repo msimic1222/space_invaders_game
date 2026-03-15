@@ -327,7 +327,7 @@ function gameLoop(timeStamp){
 
             let sign = Math.sign(alienDirection);
 
-            alienDirection = sign * (2.5 + (15 - alive) / 4);
+            alienDirection = sign * (2.5 + (20 - alive) / 4);
 
             if(Math.abs(alienDirection) > 8)
                 alienDirection = sign * 8;
