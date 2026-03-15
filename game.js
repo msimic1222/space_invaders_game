@@ -285,7 +285,7 @@ function gameLoop(timeStamp){
             });
         });
 
-        if(Math.random()<0.008 && aliens.length>0){
+        if(Math.random()<0.003 && aliens.length>0){
 
             const shooter = aliens[Math.floor(Math.random()*aliens.length)];
 
