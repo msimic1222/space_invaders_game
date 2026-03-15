@@ -2,7 +2,7 @@
 Marko Simic
 Space Invaders Game - COMP 2800
 JavaScript version of the entire game, and the main file to run the game in a browser.
-*****************************************************************************8*/
+******************************************************************************/
 
 
 const canvas = document.getElementById("gameCanvas");
@@ -398,13 +398,13 @@ function gameLoop(timeStamp){ // function for gameLoop
 
         ctx.fillStyle="white";
         ctx.font="28px Arial";
-        ctx.fillText(gameOverReason,W/2,340);
+        ctx.fillText(gameOverReason,W/2,340); // display the reason the game is over 
 
         ctx.font="26px Arial";
         ctx.fillText("Score: "+score,W/2,380);
         ctx.fillText("Press ENTER to Restart",W/2,430);
 
-        if(keys["Enter"]) gameState="title"; // if enter is pressed, gameState moves oto title
+        if(keys["Enter"]) gameState="title"; // if enter is pressed, gameState moves to title
     }
 
     else if(gameState==="win"){ // if gameState is win
