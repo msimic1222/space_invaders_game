@@ -181,7 +181,7 @@ function startGame(){
         stars.push(new Star());
     }
 
-    for(let r=0;r<3;r++){ // nested for loop to create aliens in grid pattern 
+    for(let r=0;r<4;r++){ // nested for loop to create aliens in grid pattern 
         for(let c=0;c<5;c++){
             aliens.push(new Alien(100+c*120,60+r*60));
         }
