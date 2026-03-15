@@ -1,422 +1,289 @@
-/***************
-Marko Simic
-Space Invaders Game - COMP 2800
-JavaScript version of the entire game, and the main file to run the game in a browser.
-*****************************************************************************8*/
-
-
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-
-const W = canvas.width;
-const H = canvas.height;
-
-// images loaded before starting the game
 
 const playerImg = new Image();
 playerImg.src = "player.png";
 
-const alienImg = new Image(); // image for the invaders 
+const alienImg = new Image();
 alienImg.src = "alien.png";
 
-const laserImg = new Image(); // image for players laser/bullet 
-laserImg.src = "laserbeam.png";
+const bulletImg = new Image();
+bulletImg.src = "laserbeam.png";
 
 const explosionImg = new Image();
-explosionImg.src = "explosion.png"; // image for explosion when player or alien is hit
+explosionImg.src = "explosion.png";
 
-// GAME STATE 
-
-let gameState = "title";
-
-// VARIABLES
-
-let player; // all game objects and variables are declared here for easy access in all functions
-let bullets;
-let alienBullets;
+let player;
 let aliens;
+let bullets;
 let explosions;
-let stars;
 
 let score;
 let lives;
+
+let gameState = "start";
+
 let alienDirection;
-let gameOverReason = "";
+let alienSpeed;
 
-// CLASSES
+const START_SPEED = 40;     // pixels per second
+const SPEED_INCREASE = 5;
+const MAX_SPEED = 120;
 
-class Star{ // class for the starry background, just for visual effect
-    constructor(){
-        this.x = Math.random()*W;
-        this.y = Math.random()*H;
-        this.size = Math.random()*2 + 1;
-        this.speed = Math.random()*1 + 0.5;
+const bulletSpeed = 300;    // pixels per second
+
+let keys = {};
+
+document.addEventListener("keydown", (e) => {
+
+    keys[e.key] = true;
+
+    if (gameState === "start" && e.key === "Enter") {
+        startGame();
     }
 
-    move(){ // moves the star downwards to create a scrolling effect
-        this.y += this.speed;
-
-        if(this.y > H){
-            this.y = 0;
-            this.x = Math.random()*W;
-        }
+    if ((gameState === "gameover" || gameState === "win") && e.key === "Enter") {
+        startGame();
     }
 
-    draw(){ // draws the star as a white square
-        ctx.fillStyle="white";
-        ctx.fillRect(this.x,this.y,this.size,this.size);
-    }
-}
-
-class Player{ // class for the player's spaceship 
-    constructor(x,y){  // constructor takes initial x and y position of the player
-        this.x=x;
-        this.y=y;
-        this.width=40;
-        this.height=40;
-        this.speed=6;
-    }
-
-    moveLeft(){ // method to move the player left, checks for boundaries to prevent moving off screen
-        this.x-=this.speed;
-        if(this.x<0) this.x=0;
-    }
-
-    moveRight(){ // method to move the player right, checks for boundaries to prevent moving off screen
-        this.x+=this.speed;
-        if(this.x+this.width>W)
-            this.x=W-this.width;
-    }
-
-    draw(){ // method to draw the player's spaceship using the loaded image
-        ctx.drawImage(playerImg,this.x,this.y,this.width,this.height);
-    }
-}
-
-class Alien{
-    constructor(x,y){
-        this.x=x;
-        this.y=y;
-        this.width=40;
-        this.height=40;
-    }
-
-    draw(){ // method to draw the alien invader using the loaded image
-        ctx.drawImage(alienImg,this.x,this.y,this.width,this.height);
-    }
-}
-
-class Bullet{ // class for the player's laser/bullet
-    constructor(x,y){ // constructor, takes x and y position of the bullet
-        this.x=x;
-        this.y=y;
-        this.width=16;
-        this.height=32;
-        this.speed=8;
-    }
-
-    move(){ // method to move bullet upwards 
-        this.y-=this.speed;
-    }
-
-    draw(){ // draws the bullet using the loaded laser image
-        ctx.drawImage(laserImg,this.x,this.y,this.width,this.height);
-    }
-}
-
-class AlienBullet{ // class for alien's bullet, it is similar to player's, instead moving upwards
-    constructor(x,y){ // constructor, takes x and y position of the alien bullet
-        this.x=x;
-        this.y=y;
-        this.width=6;
-        this.height=16;
-        this.speed=4;
-    }
-
-    move(){ // method to move alien bullet downwards towards the player
-        this.y+=this.speed;
-    }
-
-    draw(){ // draws alien bullet as red rectangle, didn't want to use image to differentiate from player 
-        ctx.fillStyle="red";
-        ctx.fillRect(this.x,this.y,this.width,this.height);
-    }
-}
-
-class Explosion{ // explosion class for when player/invader is hit 
-    constructor(x,y){ // constructor takes x and y positions 
-        this.x=x;
-        this.y=y;
-        this.timer=20;
-    }
-
-    draw(){
-        ctx.drawImage(explosionImg,this.x,this.y,40,40);
-        this.timer--;
-    }
-
-    done(){
-        return this.timer<=0;
-    }
-}
-
-// START GAME 
-
-function startGame(){
-
-    player = new Player(380,520); // creates player object at the bottom center of the screen
-
-    bullets=[]; // initializes arrays for bullets, alien bullets, aliens, explosions, and stars
-    alienBullets=[];
-    aliens=[];
-    explosions=[];
-    stars=[];
-
-    score=0; // score starts at 0, lives start at 3, and alien direction starts moving right (positive)
-    lives=3;
-
-    alienDirection=2;
-
-    for(let i=0;i<100;i++){ // for loop to create 100 stars for the background
-        stars.push(new Star());
-    }
-
-    for(let r=0;r<3;r++){ // nested for loop to create aliens in grid pattern 
-        for(let c=0;c<5;c++){
-            aliens.push(new Alien(100+c*120,60+r*60));
-        }
-    }
-
-    gameState="playing"; // gameState is set to "playing", start game, allow player to move/shoot
-}
-
-// INPUT CONTROLS
-
-const keys={};
-
-document.addEventListener("keydown",e=>{ // event listener for keydown
-
-    keys[e.code]=true; // sets key code to true in keys object when pressed
-
-    if(gameState==="title" && e.code==="Enter"){ // if on title screen and player presses Enter,
-        startGame(); // start the game
+    if (gameState === "playing" && e.key === " ") {
+        shoot();
     }
 
 });
 
-document.addEventListener("keyup",e=>{ // action listener for keyup
-    keys[e.code]=false;
+document.addEventListener("keyup", (e) => {
+    keys[e.key] = false;
 });
 
-// GAME LOOP
+function startGame() {
 
-function gameLoop(){ // main game loop, runs every frame using requestAnimationFrame
+    player = {
+        x: canvas.width / 2 - 20,
+        y: canvas.height - 70,
+        width: 40,
+        height: 40,
+        speed: 300
+    };
 
-    ctx.clearRect(0,0,W,H); // clears the canvas for the next frame
+    bullets = [];
+    explosions = [];
 
-    // STAR BACKGROUND
+    score = 0;
+    lives = 3;
 
-    if(stars){// if stars exist, move and draw them for the scrolling starry background effect
-        stars.forEach(star=>{
-            star.move();
-            star.draw();
-        });
-    }
+    alienSpeed = START_SPEED;
+    alienDirection = 1;
 
-    if(gameState==="title"){ // if the state of the game is "title", display the title screen with game name and instructions to start 
+    aliens = [];
 
-        ctx.fillStyle="white";
-        ctx.textAlign="center";
+    const rows = 3;
+    const cols = 5;
 
-        ctx.font="60px Arial";
-        ctx.fillText("SPACE INVADERS",W/2,250);
+    for (let r = 0; r < rows; r++) {
 
-        ctx.font="30px Arial";
-        ctx.fillText("Press ENTER to Start",W/2,320);
-    }
+        for (let c = 0; c < cols; c++) {
 
-    else if(gameState==="playing"){ // otherwise if game state is playing, run main game logicc for player movement
-
-        if(keys["ArrowLeft"]) player.moveLeft(); // if left arrow key is pressed, move player left
-        if(keys["ArrowRight"]) player.moveRight(); // if right arrow key is pressed, move player right
-
-        if(keys["Space"] && bullets.length===0){ // if space key is pressed and there are no existing bullets on the screen, create a new bullet at the player's position
-            bullets.push(new Bullet(player.x+16,player.y)); // fire bullet from center of player spaceship
-        }
-
-        bullets.forEach((b,i)=>{ // for each bullet, move upwards and when it goes off screen, remove from bullet array
-            b.move();
-            if(b.y<0) bullets.splice(i,1);
-        });
-
-        bullets.forEach((b,bi)=>{ // nested forEach loop to check for collisions between player bullets and alien, if detected, create explosion, remove alien and bullet, and increase score
-            aliens.forEach((a,ai)=>{
-
-                if( // collision detection between bullet and alien, found on github
-                    b.x<a.x+a.width &&
-                    b.x+b.width>a.x &&
-                    b.y<a.y+a.height &&
-                    b.y+b.height>a.y
-                ){
-
-                    explosions.push(new Explosion(a.x,a.y)); // create explosion at alien's position when hit
-
-                    aliens.splice(ai,1); // delete alien and bullet from their respective arrays when hit
-                    bullets.splice(bi,1);
-
-                    score+=10; // increase score by 10 for each alien hit
-                }
-
+            aliens.push({
+                x: 100 + c * 120,
+                y: 60 + r * 70,
+                width: 40,
+                height: 40
             });
-        });
 
-        if(Math.random()<0.02 && aliens.length>0){ // to make aliens shoot randomly 
-
-            const shooter = aliens[Math.floor(Math.random()*aliens.length)];
-
-            alienBullets.push( // create new alien bullet 
-                new AlienBullet(shooter.x+20,shooter.y+40)
-            );
         }
 
-        alienBullets.forEach((b,i)=>{ // for each alien bullet, move downwards and if it goes off screen, remove from alienBullets array
+    }
 
-            b.move();
-
-            if(b.y>H) alienBullets.splice(i,1);
-
-            if( // if alien bullet collides with player, remove bullet, decrease lives, and create explosion at player's position, if lives reach 0, end game with game over state
-                b.x<player.x+player.width &&
-                b.x+b.width>player.x &&
-                b.y<player.y+player.height &&
-                b.y+b.height>player.y
-            ){
-
-                alienBullets.splice(i,1);
-
-                lives--;
-
-                explosions.push(new Explosion(player.x,player.y));
-
-                if(lives<=0){ // check if lives are 0
-                    gameOverReason="You ran out of lives!";
-                    gameState="gameover"; // make state "gameover" if player loses all lives
-                }
-            }
-
-        });
-
-        let alive = aliens.length;
-
-if(alive > 0){
-
-    let sign = Math.sign(alienDirection);
-
-    // slower base speed and slower increase
-    alienDirection = sign * (1.2 + (15 - alive) / 25);
-
-    // lower maximum speed cap
-    if(Math.abs(alienDirection) > 2.2)
-        alienDirection = sign * 2.2;
+    gameState = "playing";
 }
 
-        let hitEdge=false;
+function shoot() {
 
-        aliens.forEach(a=>{ // for each alien, check if it hits the edge of the screen, if so, set hitEdge to true to reverse direction and move down
-            if(
-                a.x+alienDirection<0 ||
-                a.x+a.width+alienDirection>W
-            ){
-                hitEdge=true;
-            }
-        });
+    bullets.push({
+        x: player.x + player.width / 2 - 5,
+        y: player.y,
+        width: 10,
+        height: 20
+    });
 
-        if(hitEdge){
-            alienDirection*=-1;
-            aliens.forEach(a=>a.y+=20);
-        }
-        else{
-            aliens.forEach(a=>a.x+=alienDirection);
-        }
-
-        aliens.forEach(a=>{
-            if(a.y+40>=player.y){ // if invaders reach player's level, end game with game over state 
-                gameOverReason="The invaders reached Earth!";
-                gameState="gameover";
-            }
-        });
-
-        if(aliens.length===0){ // if no more invaders remaining, end game with win state
-            gameOverReason="You defeated all the invaders!";
-            gameState="win";
-        }
-
-        ctx.fillStyle="white";
-        ctx.textAlign="left";
-        ctx.font="20px Arial";
-        ctx.fillText("Score: "+score,10,25);
-
-        for(let i=0;i<lives;i++){ // draw remaining lives as player spaceship icons in the top right corner
-            ctx.drawImage(playerImg,W-40*(i+1),5,30,30);
-        }
-
-        player.draw(); // draw player spaceship
-
-        aliens.forEach(a=>a.draw()); // draw all aliens, bullets, alien bullets, and explosions
-        bullets.forEach(b=>b.draw());
-        alienBullets.forEach(b=>b.draw());
-
-        explosions.forEach((e,i)=>{
-            e.draw();
-            if(e.done()) explosions.splice(i,1);
-        });
-    }
-
-    else if(gameState==="gameover"){ // if gamestate is "gameover", display red "GAME OVER" text, the reason for game over, the player's final score, and instructions to restart the game by pressing Enter
-
-        ctx.fillStyle="black";
-        ctx.fillRect(0,0,W,H);
-
-        ctx.fillStyle="red";
-        ctx.textAlign="center";
-
-        ctx.font="60px Arial";
-        ctx.fillText("GAME OVER",W/2,280);
-
-        ctx.fillStyle="white";
-        ctx.font="28px Arial";
-        ctx.fillText(gameOverReason,W/2,340);
-
-        ctx.font="26px Arial";
-        ctx.fillText("Score: "+score,W/2,380);
-        ctx.fillText("Press ENTER to Restart",W/2,430);
-
-        if(keys["Enter"]) gameState="title";
-    }
-
-    else if(gameState==="win"){
-
-        ctx.fillStyle="black";
-        ctx.fillRect(0,0,W,H);
-
-        ctx.fillStyle="green";
-        ctx.textAlign="center";
-
-        ctx.font="60px Arial";
-        ctx.fillText("YOU WIN!",W/2,280);
-
-        ctx.fillStyle="white";
-        ctx.font="28px Arial";
-        ctx.fillText(gameOverReason,W/2,340);
-
-        ctx.font="26px Arial";
-        ctx.fillText("Score: "+score,W/2,380);
-        ctx.fillText("Press ENTER to Restart",W/2,430);
-
-        if(keys["Enter"]) gameState="title";
-    }
-
-    requestAnimationFrame(gameLoop); // request the next frame to keep the game loop running
 }
 
-gameLoop(); // start the game loop when the script loads
+function update(deltaTime) {
+
+    if (gameState !== "playing") return;
+
+    if (keys["ArrowLeft"]) {
+        player.x -= player.speed * deltaTime;
+    }
+
+    if (keys["ArrowRight"]) {
+        player.x += player.speed * deltaTime;
+    }
+
+    player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+
+    bullets.forEach(b => {
+        b.y -= bulletSpeed * deltaTime;
+    });
+
+    bullets = bullets.filter(b => b.y > -20);
+
+    let hitEdge = false;
+
+    aliens.forEach(a => {
+
+        if (a.x + a.width >= canvas.width || a.x <= 0) {
+            hitEdge = true;
+        }
+
+    });
+
+    if (hitEdge) {
+
+        alienDirection *= -1;
+
+        aliens.forEach(a => {
+            a.y += 20;
+        });
+
+    }
+
+    aliens.forEach(a => {
+        a.x += alienSpeed * alienDirection * deltaTime;
+    });
+
+    bullets.forEach((b, bi) => {
+
+        aliens.forEach((a, ai) => {
+
+            if (
+                b.x < a.x + a.width &&
+                b.x + b.width > a.x &&
+                b.y < a.y + a.height &&
+                b.y + b.height > a.y
+            ) {
+
+                explosions.push({
+                    x: a.x,
+                    y: a.y,
+                    timer: 0.3
+                });
+
+                aliens.splice(ai, 1);
+                bullets.splice(bi, 1);
+
+                score += 100;
+
+                alienSpeed += SPEED_INCREASE;
+                alienSpeed = Math.min(alienSpeed, MAX_SPEED);
+
+            }
+
+        });
+
+    });
+
+    explosions.forEach(e => {
+        e.timer -= deltaTime;
+    });
+
+    explosions = explosions.filter(e => e.timer > 0);
+
+    aliens.forEach(a => {
+
+        if (a.y + a.height >= player.y) {
+            gameState = "gameover";
+        }
+
+    });
+
+    if (aliens.length === 0) {
+        gameState = "win";
+    }
+
+}
+
+function draw() {
+
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (gameState === "start") {
+
+        ctx.fillStyle = "white";
+        ctx.font = "40px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("Space Invaders", canvas.width / 2, 250);
+
+        ctx.font = "20px Arial";
+        ctx.fillText("Press ENTER to Start", canvas.width / 2, 320);
+
+        return;
+
+    }
+
+    ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+
+    aliens.forEach(a => {
+        ctx.drawImage(alienImg, a.x, a.y, a.width, a.height);
+    });
+
+    bullets.forEach(b => {
+        ctx.drawImage(bulletImg, b.x, b.y, b.width, b.height);
+    });
+
+    explosions.forEach(e => {
+        ctx.drawImage(explosionImg, e.x, e.y, 40, 40);
+    });
+
+    ctx.fillStyle = "white";
+    ctx.font = "20px Arial";
+    ctx.textAlign = "left";
+    ctx.fillText("Score: " + score, 20, 30);
+
+    for (let i = 0; i < lives; i++) {
+        ctx.drawImage(playerImg, canvas.width - 40 - i * 40, 10, 30, 30);
+    }
+
+    if (gameState === "gameover") {
+
+        ctx.fillStyle = "red";
+        ctx.font = "40px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("GAME OVER", canvas.width / 2, 300);
+
+        ctx.font = "20px Arial";
+        ctx.fillText("Press ENTER to Restart", canvas.width / 2, 350);
+
+    }
+
+    if (gameState === "win") {
+
+        ctx.fillStyle = "green";
+        ctx.font = "40px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("YOU DEFEATED ALL THE INVADERS!", canvas.width / 2, 300);
+
+        ctx.font = "20px Arial";
+        ctx.fillText("Press ENTER to Play Again", canvas.width / 2, 350);
+
+    }
+
+}
+
+let lastTime = 0;
+
+function gameLoop(timeStamp) {
+
+    const deltaTime = (timeStamp - lastTime) / 1000;
+    lastTime = timeStamp;
+
+    update(deltaTime);
+    draw();
+
+    requestAnimationFrame(gameLoop);
+
+}
+
+requestAnimationFrame(gameLoop);
